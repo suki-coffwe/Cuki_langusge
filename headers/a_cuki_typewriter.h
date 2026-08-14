@@ -255,4 +255,125 @@ static inline void render(Display *display, Window window, GC gc)
     XFillRectangle(display, window, gc, cursor_draw_x, cursor_draw_y, 3, CHAR_SIZE);
 }
 
+//
+// Helper to get exact (x, y) coordinates for any cursor/character index
+static inline void get_char_pos(Display *display, Window window, int target_index, int *out_x, int *out_y) {
+    XWindowAttributes gwa;
+    XGetWindowAttributes(display, window, &gwa);
+    int max_x = gwa.width - PADDING;
+
+    int cur_x = PADDING;
+    int cur_y = PADDING;
+
+    for (int i = 0; i <= len; i++) {
+        if (cur_x + CHAR_SIZE > max_x && cur_x > PADDING) {
+            cur_x = PADDING;
+            cur_y += CHAR_SIZE + GAP;
+        }
+
+        if (i == target_index) {
+            *out_x = cur_x;
+            *out_y = cur_y;
+            return;
+        }
+
+        if (i == len) break;
+
+        if (buffer[i] == '\n') {
+            cur_x = PADDING;
+            cur_y += CHAR_SIZE + GAP;
+        } else {
+            cur_x += CHAR_SIZE + GAP;
+        }
+    }
+}
+
+static inline void move_cursor_up(Display *display, Window window) {
+    if (cursor <= 0) return;
+
+    int cur_x_pos, cur_y_pos;
+    get_char_pos(display, window, cursor, &cur_x_pos, &cur_y_pos);
+
+    int target_y = cur_y_pos - (CHAR_SIZE + GAP);
+    if (target_y < PADDING) return; // Already on top line
+
+    XWindowAttributes gwa;
+    XGetWindowAttributes(display, window, &gwa);
+    int max_x = gwa.width - PADDING;
+
+    int best_i = -1;
+    int min_dist = 999999;
+    int cur_x = PADDING;
+    int cur_y = PADDING;
+
+    for (int i = 0; i <= len; i++) {
+        if (cur_x + CHAR_SIZE > max_x && cur_x > PADDING) {
+            cur_x = PADDING;
+            cur_y += CHAR_SIZE + GAP;
+        }
+
+        if (cur_y == target_y) {
+            int dist = abs(cur_x - cur_x_pos);
+            if (dist < min_dist) {
+                min_dist = dist;
+                best_i = i;
+            }
+        }
+
+        if (i == len) break;
+
+        if (buffer[i] == '\n') {
+            cur_x = PADDING;
+            cur_y += CHAR_SIZE + GAP;
+        } else {
+            cur_x += CHAR_SIZE + GAP;
+        }
+    }
+
+    if (best_i != -1) cursor = best_i;
+}
+
+static inline void move_cursor_down(Display *display, Window window) {
+    int cur_x_pos, cur_y_pos;
+    get_char_pos(display, window, cursor, &cur_x_pos, &cur_y_pos);
+
+    int target_y = cur_y_pos + (CHAR_SIZE + GAP);
+
+    XWindowAttributes gwa;
+    XGetWindowAttributes(display, window, &gwa);
+    int max_x = gwa.width - PADDING;
+
+    int best_i = -1;
+    int min_dist = 999999;
+    int cur_x = PADDING;
+    int cur_y = PADDING;
+
+    for (int i = 0; i <= len; i++) {
+        if (cur_x + CHAR_SIZE > max_x && cur_x > PADDING) {
+            cur_x = PADDING;
+            cur_y += CHAR_SIZE + GAP;
+        }
+
+        if (cur_y == target_y) {
+            int dist = abs(cur_x - cur_x_pos);
+            if (dist < min_dist) {
+                min_dist = dist;
+                best_i = i;
+            }
+        }
+
+        if (i == len) break;
+
+        if (buffer[i] == '\n') {
+            cur_x = PADDING;
+            cur_y += CHAR_SIZE + GAP;
+        } else {
+            cur_x += CHAR_SIZE + GAP;
+        }
+    }
+
+    if (best_i != -1) cursor = best_i;
+}
+//
+
 #endif

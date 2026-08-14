@@ -174,6 +174,16 @@ int main(void)
             {
                 move_cursor_right();
             }
+
+            else if (keysym == XK_Up)
+            {
+                move_cursor_up(display, window);
+            }
+            else if (keysym == XK_Down)
+            {
+                move_cursor_down(display, window);
+            }
+
             else if (keysym == XK_Escape)
             {
                 break;
