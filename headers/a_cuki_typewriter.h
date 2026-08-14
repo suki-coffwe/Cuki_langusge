@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "cuki_bitmaps.h"
-
+//
 #define MAX_CHARS 1024
 #define SCALE 2
 #define CHAR_SIZE (GRID_SIZE * SCALE)
